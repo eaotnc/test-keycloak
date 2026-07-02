@@ -1,0 +1,53 @@
+{
+  "realm": "myapp",
+  "enabled": true,
+  "displayName": "Acme Back Office",
+  "loginTheme": "keycloak",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Back office administrator" },
+      { "name": "user", "description": "Standard user" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "react-app",
+      "name": "Back Office (React SPA)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:3000/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "User",
+      "email": "demo@acme.io",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["admin", "user"]
+    }
+  ]
+}

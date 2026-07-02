@@ -21,7 +21,9 @@ services:
     image: quay.io/keycloak/keycloak:26.6.4
     container_name: keycloak
     restart: unless-stopped
-    command: start-dev
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/import:/opt/keycloak/data/import:ro
     environment:
       # Initial admin user (created only on first startup)
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}

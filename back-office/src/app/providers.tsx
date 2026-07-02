@@ -1,6 +1,5 @@
 "use client";
 
-import "@ant-design/v5-patch-for-react-19";
 import { ConfigProvider, App as AntApp, theme } from "antd";
 import { AuthProvider } from "@/providers/AuthProvider";
 import type { ReactNode } from "react";

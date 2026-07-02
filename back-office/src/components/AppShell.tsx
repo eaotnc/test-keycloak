@@ -45,10 +45,9 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
   if (!initialized) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Spin size="large" tip="Connecting to Keycloak…">
-          <div className="p-12" />
-        </Spin>
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <Spin size="large" />
+        <span className="text-sm text-slate-400">Connecting to Keycloak…</span>
       </div>
     );
   }
