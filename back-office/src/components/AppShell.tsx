@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   Layout,
   Menu,
@@ -10,6 +10,7 @@ import {
   Button,
   Spin,
   theme,
+  App,
 } from "antd";
 import {
   DashboardOutlined,
@@ -26,27 +27,43 @@ import { useAuth } from "@/providers/AuthProvider";
 
 const { Header, Sider, Content } = Layout;
 
-const menuItems = [
-  { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
-  { key: "/users", icon: <TeamOutlined />, label: "Users" },
-  { key: "/orders", icon: <ShoppingCartOutlined />, label: "Orders" },
-  { key: "/settings", icon: <SettingOutlined />, label: "Settings" },
-];
-
 export default function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const { initialized, authenticated, user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { message } = App.useApp();
   const {
     token: { colorBgContainer, borderRadiusLG, colorBorderSecondary },
   } = theme.useToken();
+
+  const isAdmin = Boolean(user?.roles.includes("admin"));
+
+  const menuItems = useMemo(
+    () => [
+      { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+      ...(isAdmin
+        ? [{ key: "/users", icon: <TeamOutlined />, label: "Users" }]
+        : []),
+      { key: "/orders", icon: <ShoppingCartOutlined />, label: "Orders" },
+      { key: "/settings", icon: <SettingOutlined />, label: "Settings" },
+    ],
+    [isAdmin],
+  );
 
   useEffect(() => {
     if (initialized && !authenticated) {
       router.replace("/login");
     }
   }, [initialized, authenticated, router]);
+
+  useEffect(() => {
+    if (searchParams.get("error") === "forbidden") {
+      message.error("You don't have permission to access that page.");
+      router.replace(pathname);
+    }
+  }, [searchParams, message, router, pathname]);
 
   const handleLogout = async () => {
     await logout();
