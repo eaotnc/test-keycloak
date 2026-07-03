@@ -2,14 +2,12 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
-import type Keycloak from "keycloak-js";
-import { getKeycloak } from "@/lib/keycloak";
 
 interface UserProfile {
   username?: string;
@@ -18,84 +16,86 @@ interface UserProfile {
   roles: string[];
 }
 
+interface LoginResult {
+  ok: boolean;
+  error?: string;
+}
+
 interface AuthContextValue {
   initialized: boolean;
   authenticated: boolean;
-  token?: string;
   user: UserProfile | null;
-  keycloak: Keycloak | null;
-  login: () => void;
-  logout: () => void;
+  login: (username: string, password: string) => Promise<LoginResult>;
+  logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   initialized: false,
   authenticated: false,
   user: null,
-  keycloak: null,
-  login: () => {},
-  logout: () => {},
+  login: async () => ({ ok: false }),
+  logout: async () => {},
+  refresh: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialized, setInitialized] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const [token, setToken] = useState<string | undefined>();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const keycloakRef = useRef<Keycloak | null>(null);
-  const didInit = useRef(false);
 
-  useEffect(() => {
-    if (didInit.current) return;
-    didInit.current = true;
-
-    const keycloak = getKeycloak();
-    keycloakRef.current = keycloak;
-
-    keycloak
-      .init({
-        onLoad: "check-sso",
-        silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-        pkceMethod: "S256",
-      })
-      .then((auth) => {
-        setAuthenticated(auth);
-        setInitialized(true);
-        if (auth) {
-          setToken(keycloak.token);
-          const parsed = keycloak.tokenParsed as
-            | Record<string, unknown>
-            | undefined;
-          setUser({
-            username: keycloak.tokenParsed?.preferred_username as string,
-            name: parsed?.name as string,
-            email: parsed?.email as string,
-            roles: (keycloak.realmAccess?.roles ?? []) as string[],
-          });
-        }
-      })
-      .catch(() => setInitialized(true));
-
-    keycloak.onTokenExpired = () => {
-      keycloak.updateToken(30).then(() => setToken(keycloak.token));
-    };
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/session", { cache: "no-store" });
+      const data = await res.json();
+      setAuthenticated(Boolean(data.authenticated));
+      setUser(data.user ?? null);
+    } catch {
+      setAuthenticated(false);
+      setUser(null);
+    } finally {
+      setInitialized(true);
+    }
   }, []);
 
-  const login = () => keycloakRef.current?.login();
-  const logout = () =>
-    keycloakRef.current?.logout({ redirectUri: window.location.origin });
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const login = useCallback(
+    async (username: string, password: string): Promise<LoginResult> => {
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return { ok: false, error: data.error ?? "Login failed" };
+        }
+        setUser(data.user ?? null);
+        setAuthenticated(true);
+        return { ok: true };
+      } catch {
+        return { ok: false, error: "Network error. Please try again." };
+      }
+    },
+    [],
+  );
+
+  const logout = useCallback(async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setAuthenticated(false);
+      setUser(null);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider
-      value={{
-        initialized,
-        authenticated,
-        token,
-        user,
-        keycloak: keycloakRef.current,
-        login,
-        logout,
-      }}
+      value={{ initialized, authenticated, user, login, logout, refresh }}
     >
       {children}
     </AuthContext.Provider>

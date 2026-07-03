@@ -106,7 +106,7 @@ export default function UsersPage() {
   ];
 
   return (
-    <Space direction="vertical" size="large" style={{ display: "flex" }}>
+    <Space orientation="vertical" size="large" style={{ display: "flex" }}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <Typography.Title level={3} style={{ marginBottom: 0 }}>

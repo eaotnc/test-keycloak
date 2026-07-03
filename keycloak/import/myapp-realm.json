@@ -13,23 +13,16 @@
   },
   "clients": [
     {
-      "clientId": "react-app",
-      "name": "Back Office (React SPA)",
+      "clientId": "back-office",
+      "name": "Back Office (BFF)",
       "enabled": true,
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "redirectUris": [
-        "http://localhost:3000/*"
-      ],
-      "webOrigins": [
-        "http://localhost:3000",
-        "+"
-      ],
-      "attributes": {
-        "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:3000/*"
-      }
+      "publicClient": false,
+      "secret": "back-office-secret-change-me",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": []
     }
   ],
   "users": [

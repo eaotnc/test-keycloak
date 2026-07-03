@@ -1,6 +1,11 @@
-# Keycloak (Docker)
+# Keycloak (Docker) + Next.js Back Office
 
-A local [Keycloak](https://www.keycloak.org/) `26.6.4` setup running in development mode with a persistent PostgreSQL 16 database, orchestrated with Docker Compose.
+A local [Keycloak](https://www.keycloak.org/) `26.6.4` setup running in development mode with a persistent PostgreSQL 16 database (orchestrated with Docker Compose), plus a **Next.js + Ant Design back office** demo app secured by Keycloak.
+
+- **`docker-compose.yml`** — Keycloak + PostgreSQL, auto-imports the `myapp` realm from `keycloak/import/`.
+- **`back-office/`** — Next.js 16 admin dashboard (Ant Design v6 + Tailwind v4) wired to Keycloak. See [`back-office/README.md`](./back-office/README.md).
+
+The imported `myapp` realm includes a public SPA client (`react-app`) and a demo user (`demo` / `demo`).
 
 ## Prerequisites
 

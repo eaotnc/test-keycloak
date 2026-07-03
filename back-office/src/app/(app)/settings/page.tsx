@@ -20,7 +20,7 @@ export default function SettingsPage() {
   const { message } = App.useApp();
 
   return (
-    <Space direction="vertical" size="large" style={{ display: "flex" }}>
+    <Space orientation="vertical" size="large" style={{ display: "flex" }}>
       <div>
         <Typography.Title level={3} style={{ marginBottom: 0 }}>
           Settings

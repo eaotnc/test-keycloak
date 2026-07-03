@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Layout,
@@ -9,7 +9,6 @@ import {
   Dropdown,
   Button,
   Spin,
-  Typography,
   theme,
 } from "antd";
 import {
@@ -36,39 +35,29 @@ const menuItems = [
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const { initialized, authenticated, user, login, logout } = useAuth();
+  const { initialized, authenticated, user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const {
     token: { colorBgContainer, borderRadiusLG, colorBorderSecondary },
   } = theme.useToken();
 
-  if (!initialized) {
+  useEffect(() => {
+    if (initialized && !authenticated) {
+      router.replace("/login");
+    }
+  }, [initialized, authenticated, router]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace("/login");
+  };
+
+  if (!initialized || !authenticated) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4">
         <Spin size="large" />
-        <span className="text-sm text-slate-400">Connecting to Keycloak…</span>
-      </div>
-    );
-  }
-
-  if (!authenticated) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center gap-6 bg-slate-50">
-        <div className="flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 text-white">
-            <BankOutlined style={{ fontSize: 28 }} />
-          </div>
-          <Typography.Title level={3} style={{ margin: 0 }}>
-            Acme Back Office
-          </Typography.Title>
-          <Typography.Text type="secondary">
-            Please sign in with your Keycloak account to continue.
-          </Typography.Text>
-        </div>
-        <Button type="primary" size="large" onClick={login}>
-          Sign in with Keycloak
-        </Button>
+        <span className="text-sm text-slate-400">Loading…</span>
       </div>
     );
   }
@@ -124,7 +113,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   key: "logout",
                   icon: <LogoutOutlined />,
                   label: "Sign out",
-                  onClick: logout,
+                  onClick: handleLogout,
                 },
               ],
             }}

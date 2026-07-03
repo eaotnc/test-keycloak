@@ -44,7 +44,7 @@ const columns: ColumnsType<OrderRow> = [
 
 export default function OrdersPage() {
   return (
-    <Space direction="vertical" size="large" style={{ display: "flex" }}>
+    <Space orientation="vertical" size="large" style={{ display: "flex" }}>
       <div>
         <Typography.Title level={3} style={{ marginBottom: 0 }}>
           Orders
