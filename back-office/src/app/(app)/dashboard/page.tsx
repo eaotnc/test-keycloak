@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Card,
   Col,
@@ -10,10 +11,13 @@ import {
   Typography,
   Progress,
   Space,
+  Spin,
+  Alert,
 } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { stats, orders, type OrderRow } from "@/lib/mockData";
+import { apiGet } from "@/lib/api";
+import type { Goal, OrderRow, Stat } from "@/lib/types";
 import RevenueChart from "@/components/RevenueChart";
 
 const orderStatusColor: Record<OrderRow["status"], string> = {
@@ -43,6 +47,39 @@ const orderColumns: ColumnsType<OrderRow> = [
 ];
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      apiGet<Stat[]>("dashboard/stats"),
+      apiGet<OrderRow[]>("orders"),
+      apiGet<Goal[]>("dashboard/goals"),
+    ])
+      .then(([statsData, ordersData, goalsData]) => {
+        setStats(statsData);
+        setOrders(ordersData);
+        setGoals(goalsData);
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <Alert type="error" message="Failed to load dashboard" description={error} showIcon />;
+  }
+
   return (
     <Space orientation="vertical" size="large" style={{ display: "flex" }}>
       <div>
@@ -88,18 +125,12 @@ export default function DashboardPage() {
         <Col xs={24} lg={8}>
           <Card title="Goals">
             <Space orientation="vertical" size="large" style={{ display: "flex" }}>
-              <div>
-                <Typography.Text>Monthly target</Typography.Text>
-                <Progress percent={78} strokeColor="#4f46e5" />
-              </div>
-              <div>
-                <Typography.Text>New signups</Typography.Text>
-                <Progress percent={64} strokeColor="#10b981" />
-              </div>
-              <div>
-                <Typography.Text>Support SLA</Typography.Text>
-                <Progress percent={92} strokeColor="#f59e0b" />
-              </div>
+              {goals.map((g) => (
+                <div key={g.label}>
+                  <Typography.Text>{g.label}</Typography.Text>
+                  <Progress percent={g.percent} strokeColor="#4f46e5" />
+                </div>
+              ))}
             </Space>
           </Card>
         </Col>

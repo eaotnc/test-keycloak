@@ -17,6 +17,26 @@ services:
     networks:
       - keycloak
 
+  app-postgres:
+    image: postgres:16-alpine
+    container_name: app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${APP_POSTGRES_DB:-acme}
+      POSTGRES_USER: ${APP_POSTGRES_USER:-acme}
+      POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD:-acme}
+    ports:
+      - "${APP_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - app_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_POSTGRES_USER:-acme} -d ${APP_POSTGRES_DB:-acme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - keycloak
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.6.4
     container_name: keycloak
@@ -48,6 +68,7 @@ services:
 
 volumes:
   postgres_data:
+  app_postgres_data:
 
 networks:
   keycloak:

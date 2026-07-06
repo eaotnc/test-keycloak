@@ -1,8 +1,10 @@
 "use client";
 
-import { Card, Table, Tag, Typography, Space } from "antd";
+import { useEffect, useState } from "react";
+import { Card, Table, Tag, Typography, Space, Spin, Alert } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { orders, type OrderRow } from "@/lib/mockData";
+import { apiGet } from "@/lib/api";
+import type { OrderRow } from "@/lib/types";
 
 const statusColor: Record<OrderRow["status"], string> = {
   paid: "green",
@@ -43,6 +45,29 @@ const columns: ColumnsType<OrderRow> = [
 ];
 
 export default function OrdersPage() {
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiGet<OrderRow[]>("orders")
+      .then(setOrders)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <Alert type="error" message="Failed to load orders" description={error} showIcon />;
+  }
+
   return (
     <Space orientation="vertical" size="large" style={{ display: "flex" }}>
       <div>

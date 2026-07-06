@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   Table,
@@ -11,6 +11,8 @@ import {
   Typography,
   Avatar,
   Dropdown,
+  Spin,
+  Alert,
 } from "antd";
 import {
   SearchOutlined,
@@ -19,7 +21,8 @@ import {
   MoreOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import { users, type UserRow } from "@/lib/mockData";
+import { apiGet } from "@/lib/api";
+import type { UserRow } from "@/lib/types";
 
 const roleColor: Record<UserRow["role"], string> = {
   Admin: "purple",
@@ -35,6 +38,16 @@ const statusColor: Record<UserRow["status"], string> = {
 
 export default function UsersPage() {
   const [query, setQuery] = useState("");
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    apiGet<UserRow[]>("users")
+      .then(setUsers)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -42,7 +55,7 @@ export default function UsersPage() {
       (u) =>
         u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
     );
-  }, [query]);
+  }, [query, users]);
 
   const columns: ColumnsType<UserRow> = [
     {
@@ -104,6 +117,18 @@ export default function UsersPage() {
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <Alert type="error" message="Failed to load users" description={error} showIcon />;
+  }
 
   return (
     <Space orientation="vertical" size="large" style={{ display: "flex" }}>

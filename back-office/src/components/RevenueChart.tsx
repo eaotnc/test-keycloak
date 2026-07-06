@@ -1,14 +1,26 @@
 "use client";
 
-import { revenueByMonth } from "@/lib/mockData";
+import { useEffect, useState } from "react";
+import { apiGet } from "@/lib/api";
+import type { RevenuePoint } from "@/lib/types";
 
 const CHART_HEIGHT = 200;
 
 export default function RevenueChart() {
-  const max = Math.max(...revenueByMonth.map((d) => d.value));
+  const [data, setData] = useState<RevenuePoint[]>([]);
+
+  useEffect(() => {
+    apiGet<RevenuePoint[]>("dashboard/revenue").then(setData).catch(() => {});
+  }, []);
+
+  if (!data.length) {
+    return <div className="h-[224px]" />;
+  }
+
+  const max = Math.max(...data.map((d) => d.value));
   return (
     <div className="flex items-end gap-2 pt-4" style={{ height: CHART_HEIGHT + 24 }}>
-      {revenueByMonth.map((d) => (
+      {data.map((d) => (
         <div key={d.month} className="flex flex-1 flex-col items-center gap-2">
           <div
             className="w-full rounded-t-md bg-indigo-500/80 transition-all hover:bg-indigo-600"

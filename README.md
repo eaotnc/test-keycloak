@@ -1,26 +1,40 @@
-# Keycloak (Docker) + Next.js Back Office
+# Keycloak (Docker) + Next.js Back Office + NestJS API
 
-A local [Keycloak](https://www.keycloak.org/) `26.6.4` setup running in development mode with a persistent PostgreSQL 16 database (orchestrated with Docker Compose), plus a **Next.js + Ant Design back office** demo app secured by Keycloak.
+A local [Keycloak](https://www.keycloak.org/) `26.6.4` setup with Docker Compose, a **Next.js back office** (BFF + UI), and a **NestJS API** backed by PostgreSQL.
 
-- **`docker-compose.yml`** — Keycloak + PostgreSQL, auto-imports the `myapp` realm from `keycloak/import/`.
-- **`back-office/`** — Next.js 16 admin dashboard (Ant Design v6 + Tailwind v4) wired to Keycloak. See [`back-office/README.md`](./back-office/README.md).
+| Folder | Stack | Role |
+|--------|-------|------|
+| `docker-compose.yml` | Keycloak + Postgres ×2 | Auth + app database |
+| `back-office/` | Next.js 16, Ant Design | Admin UI + login/session (BFF) |
+| `api-service/` | NestJS, Prisma, Postgres | Business API (orders, users, dashboard) |
 
-The imported `myapp` realm includes a public SPA client (`react-app`) and a demo user (`demo` / `demo`).
+The imported `myapp` realm includes a confidential `back-office` client and a demo user (`demo` / `demo`).
 
-## Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose`).
-
-## Quick start
-
-1. (Optional) Review and edit credentials in `.env`.
-2. Start the stack:
+## Quick start (full stack)
 
 ```bash
+# 1. Start Keycloak + databases
 docker compose up -d
+
+# 2. Set up and run the API (first time only)
+cd api-service
+npm install
+npx prisma migrate dev
+npx prisma db seed
+npm run start:dev
+
+# 3. Run the back office (new terminal)
+cd back-office
+npm install
+npm run dev
 ```
 
-3. Open the admin console at [http://localhost:8080](http://localhost:8080) and log in with the credentials from `.env` (default `admin` / `admin`).
+Open [http://localhost:3000](http://localhost:3000) and sign in with **`demo` / `demo`**.
+
+- Keycloak admin: [http://localhost:8080/admin](http://localhost:8080/admin) (`admin` / `admin`)
+- API health: [http://localhost:4000/api/health](http://localhost:4000/api/health)
+
+See [`back-office/README.md`](./back-office/README.md) and [`api-service/README.md`](./api-service/README.md) for details.
 
 ## Common commands
 
